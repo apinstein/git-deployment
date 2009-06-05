@@ -1,0 +1,69 @@
+A deployment workflow in git.
+
+This scenario uses a GitHub repo as the canonical "master" for the project.
+
+On Dev Boxes:
+Pulls/Pushes from/to "github".
+local branch "to-deploy" tracks "github/to-deploy".
+
+On Staging Server:
+Pulls from "github".
+local branch "staging" tracks "github/to-deploy".
+
+On Production Server:
+Pulls from "staging"; named "make-it-live".
+local branch "production" tracks "staging/staging".
+
+Developers work on features in local branches, merge with master, and push to github.
+
+When you want to deploy, you checkout the "github/to-deploy" branch, merge in desired features, and push.
+
+When you want to promote staging to the current "github/to-deploy" branch, run "git pull" on staging.
+
+When you want to promote the code from staging to production, run "git pull make-it-live" on production.
+
+HOWTO:
+1. On dev box:
+
+git clone --origin github git://github.com/apinstein/git-deployment.git
+cd git-deployment
+
+2. Create the "to-deploy" remote branch on github.
+
+git push github master:refs/heads/to-deploy
+
+3. Create awesome new feature
+
+cat "Awesome new feature" > VERSION
+git commit -a -m "awesomeness"
+
+3. Prepare code for deployment
+
+git checkout --track -b to-deploy github/to-deploy
+git merge master
+git push github
+
+4. Set up staging server to receive to-deploy branch from GitHub.
+
+git clone --origin github git://github.com/apinstein/git-deployment.git
+cd git-deployment
+
+git checkout --track -b staging github/to-deploy
+git branch -d master
+
+5. Set up production server to receive staging branch from staging server.
+
+git clone --origin staging /path/to/stagingrepo/git-deployment
+cd git-deployment
+
+git checkout --track -b production staging/staging
+git branch -d staging
+
+6. To deploy latest to-deploy to staging, run this command on staging
+
+git pull
+
+7. To deploy latest staging to production, run this command on production
+
+git pull
+
