@@ -17,24 +17,38 @@ Capistrano::Configuration.instance(true).load do
             newTagDate = Date.today.to_s 
             newTagSerial = 1
 
-            stagingTags = `git tag -l 'staging-#{newTagDate}.*'`
-            stagingTags = stagingTags.split
+            todaysStagingTags = `git tag -l 'staging-#{newTagDate}.*'`
+            todaysStagingTags = todaysStagingTags.split
 
             natcmpSrc = File.join(File.dirname(__FILE__), '/natcmp.rb')
             require natcmpSrc
-            stagingTags.sort! do |a,b|
+            todaysStagingTags.sort! do |a,b|
                 String.natcmp(b,a,true)
             end
             
-            if stagingTags.length > 0
+            lastStagingTag = nil
+            if todaysStagingTags.length > 0
+                lastStagingTag = todaysStagingTags[0]
+
                 # calculate largest serial and increment
-                stagingTags[0] =~ /staging-[0-9]{4}-[0-9]{2}-[0-9]{2}\.([0-9]*)/
+                lastStagingTag =~ /staging-[0-9]{4}-[0-9]{2}-[0-9]{2}\.([0-9]*)/
                 newTagSerial = $1.to_i + 1
             end
             newStagingTag = "staging-#{newTagDate}.#{newTagSerial}"
 
-            puts "Tagging current branch for deployment to staging as '#{newStagingTag}'"
-            system "git tag #{newStagingTag}"
+            shaOfCurrentCheckout = `git log --format=format:%H HEAD -1`
+            shaOfLastStagingTag = nil
+            if lastStagingTag
+                shaOfLastStagingTag = `git log --format=format:%H #{lastStagingTag} -1`
+            end
+
+            if shaOfLastStagingTag == shaOfCurrentCheckout
+                puts "Not re-tagging staging because the most recent tag (#{lastStagingTag}) already points to current head"
+                newStagingTag = lastStagingTag
+            else
+                puts "Tagging current branch for deployment to staging as '#{newStagingTag}'"
+                system "git tag #{newStagingTag}"
+            end
 
             set :branch, newStagingTag
         end
@@ -46,11 +60,11 @@ Capistrano::Configuration.instance(true).load do
             end
 
             # get list of staging tags
-            stagingTags = `git tag -l 'staging-*' | sort -rn`
-            stagingTags = stagingTags.split
+            todaysStagingTags = `git tag -l 'staging-*' | sort -rn`
+            todaysStagingTags = todaysStagingTags.split
 
 
-            if !stagingTags.include? tag
+            if !todaysStagingTags.include? tag
                 raise "Staging Tag #{tag} does not exist."
             end
             
