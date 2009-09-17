@@ -53,7 +53,7 @@ Capistrano::Configuration.instance(true).load do
                 newStagingTag = lastStagingTag
             else
                 puts "Tagging current branch for deployment to staging as '#{newStagingTag}'"
-                system "git tag -a #{newStagingTag}"
+                system "git tag -a -m 'tagging current code for deployment to staging' #{newStagingTag}"
             end
 
             set :branch, newStagingTag
@@ -77,7 +77,7 @@ Capistrano::Configuration.instance(true).load do
             tag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
             newProductionTag = "production-#{$1}"
             puts "promoting staging tag #{tag} to production as '#{newProductionTag}'"
-            system "git tag -a #{newProductionTag} #{tag}"
+            system "git tag -a -m 'tagging current code for deployment to production' #{newProductionTag} #{tag}"
 
             set :branch, newProductionTag
         end
