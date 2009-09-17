@@ -7,8 +7,14 @@ Capistrano::Configuration.instance(true).load do
             send tagMethod
 
             # push tags and latest code
-            `git push`
-            `git push --tags`
+            system 'git push'
+            if $? != 0
+                raise "git push failed"
+            end
+            system 'git push --tags'
+            if $? != 0
+                raise "git push --tags failed"
+            end
         end
 
         desc "Mark the current code as a staging/qa release"
