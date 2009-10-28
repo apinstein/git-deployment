@@ -3,6 +3,9 @@ Capistrano::Configuration.instance(true).load do
     namespace :gitflow do
         desc "Calculate the tag to deploy"
         task :calculate_tag do
+            # make sure we have any other deployment tags that have been pushed by others so our auto-increment code doesn't create conflicting tags
+            `git fetch`
+
             tagMethod = "tag_#{stage}"
             send tagMethod
 
