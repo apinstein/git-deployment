@@ -89,6 +89,7 @@ Capistrano::Configuration.instance(true).load do
             newTagDate = Date.today.to_s 
             newTagSerial = 1
 
+            # @todo refactor to use last_tag_matching
             todaysStagingTags = `git tag -l 'staging-#{newTagDate}.*'`
             todaysStagingTags = todaysStagingTags.split
 
@@ -132,6 +133,7 @@ Capistrano::Configuration.instance(true).load do
             end
 
             # get list of staging tags
+            # @todo refactor to use last_tag_matching
             todaysStagingTags = `git tag -l 'staging-*' | sort -rn`
             todaysStagingTags = todaysStagingTags.split
 
