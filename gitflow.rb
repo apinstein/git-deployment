@@ -59,6 +59,7 @@ Capistrano::Configuration.instance(true).load do
                 raise "Unsupported stage #{stage}"
             end
 
+            # no idea how to properly test for an optional cap argument a la '-s tag=x'
             begin
                 toTag = tag
             rescue
