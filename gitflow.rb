@@ -1,10 +1,10 @@
-Capistrano::Configuration.instance(true).load do
+Capistrano::Configuration.instance(true).load do |configuration|
     before "deploy:update_code", "gitflow:calculate_tag"
     namespace :gitflow do
-        def last_tag_matching(matchTag)
+        def last_tag_matching(pattern)
             lastTag = nil
 
-            allTagsMatching = `git tag -l '#{matchTag}*'`
+            allTagsMatching = `git tag -l '#{pattern}'`
             allTagsMatching = allTagsMatching.split
             natcmpSrc = File.join(File.dirname(__FILE__), '/natcmp.rb')
             require natcmpSrc
@@ -19,11 +19,11 @@ Capistrano::Configuration.instance(true).load do
         end
 
         def last_staging_tag()
-            return last_tag_matching('staging-')
+            return last_tag_matching('staging-*')
         end
 
         def last_production_tag()
-            return last_tag_matching('production-')
+            return last_tag_matching('production-*')
         end
 
         desc "Calculate the tag to deploy"
@@ -60,9 +60,8 @@ Capistrano::Configuration.instance(true).load do
             end
 
             # no idea how to properly test for an optional cap argument a la '-s tag=x'
-            begin
-                toTag = tag
-            rescue
+            toTag = configuration[:tag]
+            if toTag == nil
                 puts "Calculating 'end' tag for :update_log for '#{stage}'"
                 # do different things based on stage
                 if stage == :production
@@ -90,20 +89,8 @@ Capistrano::Configuration.instance(true).load do
             newTagDate = Date.today.to_s 
             newTagSerial = 1
 
-            # @todo refactor to use last_tag_matching
-            todaysStagingTags = `git tag -l 'staging-#{newTagDate}.*'`
-            todaysStagingTags = todaysStagingTags.split
-
-            natcmpSrc = File.join(File.dirname(__FILE__), '/natcmp.rb')
-            require natcmpSrc
-            todaysStagingTags.sort! do |a,b|
-                String.natcmp(b,a,true)
-            end
-            
-            lastStagingTag = nil
-            if todaysStagingTags.length > 0
-                lastStagingTag = todaysStagingTags[0]
-
+            lastStagingTag = last_tag_matching("staging-#{newTagDate}.*")
+            if lastStagingTag
                 # calculate largest serial and increment
                 lastStagingTag =~ /staging-[0-9]{4}-[0-9]{2}-[0-9]{2}\.([0-9]*)/
                 newTagSerial = $1.to_i + 1
@@ -129,24 +116,15 @@ Capistrano::Configuration.instance(true).load do
 
         desc "Push the passed staging tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
         task :tag_production do
-            if !exists? :tag
-                raise "staging tag required; use '-s tag=staging-YYYY-MM-DD.X'"
-            end
-
-            # get list of staging tags
-            # @todo refactor to use last_tag_matching
-            todaysStagingTags = `git tag -l 'staging-*' | sort -rn`
-            todaysStagingTags = todaysStagingTags.split
-
-
-            if !todaysStagingTags.include? tag
-                raise "Staging Tag #{tag} does not exist."
-            end
+            promoteToProductionTag = configuration[:tag]
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToProductionTag
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToProductionTag =~ /staging-.*/
+            raise "Staging Tag #{promoteToProductionTag} does not exist." unless last_tag_matching(promoteToProductionTag)
             
-            tag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
+            promoteToProductionTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
             newProductionTag = "production-#{$1}"
-            puts "promoting staging tag #{tag} to production as '#{newProductionTag}'"
-            system "git tag -a -m 'tagging current code for deployment to production' #{newProductionTag} #{tag}"
+            puts "promoting staging tag #{promoteToProductionTag} to production as '#{newProductionTag}'"
+            system "git tag -a -m 'tagging current code for deployment to production' #{newProductionTag} #{promoteToProductionTag}"
 
             set :branch, newProductionTag
         end
