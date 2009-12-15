@@ -19,11 +19,11 @@ Capistrano::Configuration.instance(true).load do
         end
 
         def last_staging_tag()
-            return last_tag_matching 'staging-'
+            return last_tag_matching('staging-')
         end
 
         def last_production_tag()
-            return last_tag_matching 'production-'
+            return last_tag_matching('production-')
         end
 
         desc "Calculate the tag to deploy"
