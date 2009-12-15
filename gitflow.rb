@@ -1,6 +1,31 @@
 Capistrano::Configuration.instance(true).load do
     before "deploy:update_code", "gitflow:calculate_tag"
     namespace :gitflow do
+        def last_tag_matching(matchTag)
+            lastTag = nil
+
+            allTagsMatching = `git tag -l '#{matchTag}*'`
+            allTagsMatching = allTagsMatching.split
+            natcmpSrc = File.join(File.dirname(__FILE__), '/natcmp.rb')
+            require natcmpSrc
+            allTagsMatching.sort! do |a,b|
+                String.natcmp(b,a,true)
+            end
+            
+            if allTagsMatching.length > 0
+                lastTag = allTagsMatching[0]
+            end
+            return lastTag
+        end
+
+        def last_staging_tag()
+            return last_tag_matching 'staging-'
+        end
+
+        def last_production_tag()
+            return last_tag_matching 'production-'
+        end
+
         desc "Calculate the tag to deploy"
         task :calculate_tag do
             # make sure we have any other deployment tags that have been pushed by others so our auto-increment code doesn't create conflicting tags
@@ -18,6 +43,44 @@ Capistrano::Configuration.instance(true).load do
             if $? != 0
                 raise "git push --tags failed"
             end
+        end
+
+        desc "Show log between most recent staging tag (or given tag=XXX) and last production release."
+        task :update_log do
+            fromTag = nil
+            toTag = nil
+
+            # do different things based on stage
+            if stage == :production
+                fromTag = last_production_tag
+            elsif stage == :staging
+                fromTag = last_staging_tag
+            else
+                raise "Unsupported stage #{stage}"
+            end
+
+            begin
+                toTag = tag
+            rescue
+                puts "Calculating 'end' tag for :update_log for '#{stage}'"
+                # do different things based on stage
+                if stage == :production
+                    toTag = last_staging_tag
+                elsif stage == :staging
+                    toTag = 'head'
+                else
+                    raise "Unsupported stage #{stage}"
+                end
+            end
+
+            # run comp
+            logSubcommand = 'log'
+            if ENV['git_log_command'] && ENV['git_log_command'].strip != ''
+                logSubcommand = ENV['git_log_command']
+            end
+            command = "git #{logSubcommand} #{fromTag}..#{toTag}"
+            puts command
+            system command
         end
 
         desc "Mark the current code as a staging/qa release"
