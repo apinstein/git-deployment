@@ -97,10 +97,10 @@ Capistrano::Configuration.instance(true).load do |configuration|
             end
             newStagingTag = "staging-#{newTagDate}.#{newTagSerial}"
 
-            shaOfCurrentCheckout = `git log --format=format:%H HEAD -1`
+            shaOfCurrentCheckout = `git log --pretty=format:%H HEAD -1`
             shaOfLastStagingTag = nil
             if lastStagingTag
-                shaOfLastStagingTag = `git log --format=format:%H #{lastStagingTag} -1`
+                shaOfLastStagingTag = `git log --pretty=format:%H #{lastStagingTag} -1`
             end
 
             if shaOfLastStagingTag == shaOfCurrentCheckout
