@@ -22,6 +22,10 @@ Capistrano::Configuration.instance(true).load do |configuration|
             return last_tag_matching('staging-*')
         end
 
+        def last_demo_tag()
+            return last_tag_matching('demo-*')
+        end
+
         def last_production_tag()
             return last_tag_matching('production-*')
         end
@@ -53,6 +57,8 @@ Capistrano::Configuration.instance(true).load do |configuration|
             # do different things based on stage
             if stage == :production
                 fromTag = last_production_tag
+            elsif stage == :demo
+                fromTag = last_demo_tag
             elsif stage == :staging
                 fromTag = last_staging_tag
             else
@@ -65,6 +71,8 @@ Capistrano::Configuration.instance(true).load do |configuration|
                 puts "Calculating 'end' tag for :update_log for '#{stage}'"
                 # do different things based on stage
                 if stage == :production
+                    toTag = last_staging_tag
+                elsif stage == :demo
                     toTag = last_staging_tag
                 elsif stage == :staging
                     toTag = 'head'
@@ -112,6 +120,21 @@ Capistrano::Configuration.instance(true).load do |configuration|
             end
 
             set :branch, newStagingTag
+        end
+
+        desc "Push the passed staging tag to demo. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
+        task :tag_demo do
+            promoteToDemoTag = configuration[:tag]
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag =~ /staging-.*/
+            raise "Staging Tag #{promoteToDemoTag} does not exist." unless last_tag_matching(promoteToDemoTag)
+            
+            promoteToDemoTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
+            newDemoTag = "demo-#{$1}"
+            puts "promoting staging tag #{promoteToDemoTag} to demo as '#{newDemoTag}'"
+            system "git tag -a -m 'tagging current code for deployment to demo' #{newDemoTag} #{promoteToDemoTag}"
+
+            set :branch, newDemoTag
         end
 
         desc "Push the passed staging tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
