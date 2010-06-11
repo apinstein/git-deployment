@@ -19,7 +19,7 @@ cap production gitflow:update_log   # shows you a log of what will be pushed to 
 INSTALLATION
 * require the gitflow file after your multistage require
 require 'capistrano/ext/multistage'
-require 'git-deployment/gitflow.rb'
+require 'gitflow'
 
 Expects stages "staging" and "production".
 
