@@ -1,21 +1,19 @@
+require 'gitflow/natcmp'
+
 Capistrano::Configuration.instance(true).load do |configuration|
     before "deploy:update_code", "gitflow:calculate_tag"
     namespace :gitflow do
         def last_tag_matching(pattern)
-            lastTag = nil
-
-            allTagsMatching = `git tag -l '#{pattern}'`
-            allTagsMatching = allTagsMatching.split
-            natcmpSrc = File.join(File.dirname(__FILE__), '/natcmp.rb')
-            require natcmpSrc
-            allTagsMatching.sort! do |a,b|
+            matching_tags = `git tag -l '#{pattern}'`.split
+            matching_tags.sort! do |a,b|
                 String.natcmp(b,a,true)
             end
-            
-            if allTagsMatching.length > 0
-                lastTag = allTagsMatching[0]
-            end
-            return lastTag
+
+            last_tag = if matching_tags.length > 0
+                         matching_tags[0]
+                       else
+                         nil
+                       end
         end
 
         def last_staging_tag()
