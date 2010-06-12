@@ -31,7 +31,7 @@ Capistrano::Configuration.instance(true).load do |configuration|
           set :local_sha, `git log --pretty=format:%H HEAD -1`.chomp
           set :origin_sha, `git log --pretty=format:%H origin/#{local_branch} -1`
           unless local_sha == origin_sha
-            raise """
+            abort """
 Your #{local_branch} branch is not up to date with origin/#{local_branch}.
 Please make sure you have pulled and pushed all code before deploying:
 
@@ -55,7 +55,7 @@ Please make sure you have pulled and pushed all code before deploying:
 
             system "git push --tags origin #{local_branch}"
             if $? != 0
-                raise "git push failed"
+                abort "git push failed"
             end
         end
 
@@ -69,7 +69,7 @@ Please make sure you have pulled and pushed all code before deploying:
                        elsif stage == :staging
                          last_staging_tag
                        else
-                         raise "Unsupported stage #{stage}"
+                         abort "Unsupported stage #{stage}"
                        end
 
             # no idea how to properly test for an optional cap argument a la '-s tag=x'
@@ -81,7 +81,7 @@ Please make sure you have pulled and pushed all code before deploying:
                          elsif stage == :staging
                            'head'
                          else
-                           raise "Unsupported stage #{stage}"
+                           abort "Unsupported stage #{stage}"
                          end
             end
 
@@ -138,9 +138,9 @@ Please make sure you have pulled and pushed all code before deploying:
         desc "Push the passed staging tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
         task :tag_production do
             promote_to_production_tag = configuration[:tag]
-            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promote_to_production_tag
-            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promote_to_production_tag =~ /staging-.*/
-            raise "Staging tag #{promote_to_production_tag} does not exist." unless last_tag_matching(promote_to_production_tag)
+            abort "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promote_to_production_tag
+            abort "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promote_to_production_tag =~ /staging-.*/
+            abort "Staging tag #{promote_to_production_tag} does not exist." unless last_tag_matching(promote_to_production_tag)
             
             promote_to_production_tag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
             new_production_tag = "production-#{$1}"
