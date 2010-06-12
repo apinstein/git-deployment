@@ -5,8 +5,8 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "gitflow"
-    gem.summary = %Q{TODO: one-line summary of your gem}
-    gem.description = %Q{TODO: longer description of your gem}
+    gem.summary = %Q{Capistrano recipe for a deployment workflow based on git tags }
+    gem.description = %Q{Capistrano recipe for a deployment workflow based on git tags}
     gem.email = "josh@technicalpickles.com"
     gem.homepage = "http://github.com/technicalpickles/gitflow"
     gem.authors = ["Joshua Nichols"]
