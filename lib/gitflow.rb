@@ -84,12 +84,17 @@ Please make sure you have pulled and pushed all code before deploying:
                          end
             end
 
-            log_subcommand = if ENV['git_log_command'] && ENV['git_log_command'].strip != ''
-                               ENV['git_log_command']
-                             else
-                               'log'
-                             end
-            command = "git #{logSubcommand} #{fromTag}..#{toTag}"
+
+            command = if `git config remote.origin.url` =~ /git@github.com:(.*)\/(.*).git/
+                        "open https://github.com/#{$1}/#{$2}/compare/#{from_tag}...#{to_tag || 'master'}"
+                      else
+                        log_subcommand = if ENV['git_log_command'] && ENV['git_log_command'].strip != ''
+                                           ENV['git_log_command']
+                                         else
+                                           'log'
+                                         end
+                        "git #{logSubcommand} #{fromTag}..#{toTag}"
+                      end
             puts command
             system command
         end
