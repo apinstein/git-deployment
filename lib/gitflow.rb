@@ -2,6 +2,7 @@ require 'gitflow/natcmp'
 
 Capistrano::Configuration.instance(true).load do |configuration|
     before "deploy:update_code", "gitflow:calculate_tag"
+    before "gitflow:calculate_tag", "gitflow:verify_up_to_date"
     namespace :gitflow do
         def last_tag_matching(pattern)
             matching_tags = `git tag -l '#{pattern}'`.split
@@ -24,6 +25,25 @@ Capistrano::Configuration.instance(true).load do |configuration|
             last_tag_matching('production-*')
         end
 
+        task :verify_up_to_date do
+          set :local_branch, `git branch --no-color 2> /dev/null | sed -e '/^[^*]/d'`.gsub(/\* /, '').chomp
+          set :local_sha, `git log --pretty=format:%H HEAD -1`.chomp
+          set :origin_sha, `git log --pretty=format:%H origin/#{local_branch} -1`
+          unless local_sha == origin_sha
+            raise """
+Your #{local_branch} branch is not up to date with origin/#{local_branch}.
+Please make sure you have pulled and pushed all code before deploying:
+
+    git pull origin #{local_branch}
+    #run tests, etc
+    git push origin #{local_branch}
+
+"""
+          end
+        end
+
+
+
         desc "Calculate the tag to deploy"
         task :calculate_tag do
             # make sure we have any other deployment tags that have been pushed by others so our auto-increment code doesn't create conflicting tags
@@ -32,14 +52,9 @@ Capistrano::Configuration.instance(true).load do |configuration|
             tagMethod = "tag_#{stage}"
             send tagMethod
 
-            system 'git push'
+            system "git push --tags origin #{local_branch}"
             if $? != 0
                 raise "git push failed"
-            end
-
-            system 'git push --tags'
-            if $? != 0
-                raise "git push --tags failed"
             end
         end
 
