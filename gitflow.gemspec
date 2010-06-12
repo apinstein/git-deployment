@@ -43,11 +43,17 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::RubyGemsVersion) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<capistrano>, [">= 0"])
+      s.add_runtime_dependency(%q<stringex>, [">= 0"])
       s.add_development_dependency(%q<rspec>, [">= 1.2.9"])
     else
+      s.add_dependency(%q<capistrano>, [">= 0"])
+      s.add_dependency(%q<stringex>, [">= 0"])
       s.add_dependency(%q<rspec>, [">= 1.2.9"])
     end
   else
+    s.add_dependency(%q<capistrano>, [">= 0"])
+    s.add_dependency(%q<stringex>, [">= 0"])
     s.add_dependency(%q<rspec>, [">= 1.2.9"])
   end
 end
