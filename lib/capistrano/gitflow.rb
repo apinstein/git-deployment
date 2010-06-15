@@ -74,7 +74,7 @@ Please make sure you have pulled and pushed all code before deploying:
                        end
 
             # no idea how to properly test for an optional cap argument a la '-s tag=x'
-            to_tag = configuration[:tag]
+            to_tag = capistrano_configuration[:tag]
             to_tag ||= begin 
                          puts "Calculating 'end' tag for :commit_log for '#{stage}'"
                          to_tag = if stage == :production
@@ -137,7 +137,7 @@ Please make sure you have pulled and pushed all code before deploying:
 
           desc "Push the approved tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD-X-feature'."
           task :tag_production do
-            promote_to_production_tag = configuration[:tag]
+            promote_to_production_tag = capistrano_configuration[:tag]
 
             unless promote_to_production_tag && promote_to_production_tag =~ /staging-.*/
               abort "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'"
