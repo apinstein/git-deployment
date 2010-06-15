@@ -8,25 +8,29 @@ Gitflow simply adds some tagging/logging/workflow magic.
     $ cap production deploy   # 'head' goes to production
 
     # AFTER
-    $ cap deploy                                                  # 'head' goes to staging; tag staging-YYYY-MM-DD.X created
-    $ cap production deploy -s tag=staging-YYYY-MM-DD.X           # tag 'staging-YYYY-MM-DD.X' goes to production
-                                                                # tag 'production-YYYY-MM-DD.X' created; points to staging tag
+    $ cap deploy                                                          
+    # 'head' goes to staging; tag staging-YYYY-MM-DD.X created
+    $ cap production deploy -s tag=staging-YYYY-MM-DD-X-user-description
+    # tag 'staging-YYYY-MM-DD-X' goes to production
+    # tag 'production-YYYY-MM-DD-X' created; points to staging tag
 
     # BONUS
-    cap gitflow:update_log              # shows you a log of what will be pushed to staging that isn't already there
-    cap production gitflow:update_log   # shows you a log of what will be pushed to production that isn't already there
+    cap gitflow:commit_log              
+    # displays a commit log pushed to staging
+    # ... alternatively, if you're using GitHub, will open a page using branch compare
+    cap production gitflow:log_log   
+    # displays a commit log of what will be pushed to production
 
 == INSTALLATION
 
-
 First, install the gem:
 
-    gem install gitflow
+    gem install capistrano-gitflow
 
 Then update config/deploy.rb
 
     require 'capistrano/ext/multistage'
-    require 'gitflow' # needs to come after multistage
+    require 'capistrano/gitflow' # needs to come after multistage
 
 TODO add notes to using multistage in general
 
