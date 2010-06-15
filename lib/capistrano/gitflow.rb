@@ -154,7 +154,16 @@ Please make sure you have pulled and pushed all code before deploying:
             set :branch, new_production_tag
           end
         end
+
+        namespace :deploy do
+          namespace :pending do
+            task :compare do
+              gitflow.commit_log
+            end
+          end
+        end
       end
+
     end
   end
 end
