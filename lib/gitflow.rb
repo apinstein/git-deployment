@@ -9,7 +9,7 @@ Capistrano::Configuration.instance(true).load do |configuration|
     def last_tag_matching(pattern)
       matching_tags = `git tag -l '#{pattern}'`.split
       matching_tags.sort! do |a,b|
-        String.natcmp(b,a,true)
+        String.natcmp(b, a, true)
       end
 
       last_tag = if matching_tags.length > 0
@@ -51,8 +51,7 @@ Please make sure you have pulled and pushed all code before deploying:
       # make sure we have any other deployment tags that have been pushed by others so our auto-increment code doesn't create conflicting tags
       `git fetch`
 
-      tagMethod = "tag_#{stage}"
-      send tagMethod
+      send "tag_#{stage}"
 
       system "git push --tags origin #{local_branch}"
       if $? != 0
@@ -62,9 +61,6 @@ Please make sure you have pulled and pushed all code before deploying:
 
     desc "Show log between most recent staging tag (or given tag=XXX) and last production release."
     task :commit_log do
-      from_tag = nil
-      to_tag = nil
-
       from_tag = if stage == :production
                    last_production_tag
                  elsif stage == :staging
@@ -75,16 +71,16 @@ Please make sure you have pulled and pushed all code before deploying:
 
       # no idea how to properly test for an optional cap argument a la '-s tag=x'
       to_tag = configuration[:tag]
-      if to_tag == nil
-        puts "Calculating 'end' tag for :update_log for '#{stage}'"
-        to_tag = if stage == :production
-                   last_staging_tag
-                 elsif stage == :staging
-                   'head'
-                 else
-                   abort "Unsupported stage #{stage}"
+      to_tag ||= begin 
+                   puts "Calculating 'end' tag for :commit_log for '#{stage}'"
+                   to_tag = if stage == :production
+                              last_staging_tag
+                            elsif stage == :staging
+                              'head'
+                            else
+                              abort "Unsupported stage #{stage}"
+                            end
                  end
-      end
 
 
       command = if `git config remote.origin.url` =~ /git@github.com:(.*)\/(.*).git/
@@ -95,7 +91,7 @@ Please make sure you have pulled and pushed all code before deploying:
                                    else
                                      'log'
                                    end
-                  "git #{logSubcommand} #{fromTag}..#{toTag}"
+                  "git #{log_subcommand} #{fromTag}..#{toTag}"
                 end
       puts command
       system command
@@ -120,10 +116,9 @@ Please make sure you have pulled and pushed all code before deploying:
       new_staging_tag = "#{stage}-#{new_tag_date}-#{new_tag_serial}-#{who}-#{what}"
 
       current_sha = `git log --pretty=format:%H HEAD -1`
-      last_staging_tag_sha = nil
-      if last_staging_tag
-        last_staging_tag_sha = `git log --pretty=format:%H #{last_staging_tag} -1`
-      end
+      last_staging_tag_sha = if last_staging_tag
+                               `git log --pretty=format:%H #{last_staging_tag} -1`
+                             end
 
       if last_staging_tag_sha == current_sha
         puts "Not re-tagging staging because the most recent tag (#{last_staging_tag}) already points to current head"
@@ -136,15 +131,19 @@ Please make sure you have pulled and pushed all code before deploying:
       set :branch, new_staging_tag
     end
 
-    desc "Push the passed staging tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
+    desc "Push the approved tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD-X-feature'."
     task :tag_production do
       promote_to_production_tag = configuration[:tag]
-      abort "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promote_to_production_tag
-      abort "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promote_to_production_tag =~ /staging-.*/
-        abort "Staging tag #{promote_to_production_tag} does not exist." unless last_tag_matching(promote_to_production_tag)
 
-      promote_to_production_tag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
-        new_production_tag = "production-#{$1}"
+      unless promote_to_production_tag && promote_to_production_tag =~ /staging-.*/
+        abort "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'"
+      end
+      unless last_tag_matching(promote_to_production_tag)
+        abort "Staging tag #{promote_to_production_tag} does not exist."
+      end
+
+      promote_to_production_tag =~ /^staging-(.*)$/
+      new_production_tag = "production-#{$1}"
       puts "promoting staging tag #{promote_to_production_tag} to production as '#{new_production_tag}'"
       system "git tag -a -m 'tagging current code for deployment to production' #{new_production_tag} #{promote_to_production_tag}"
 
