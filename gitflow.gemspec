@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Joshua Nichols"]
-  s.date = %q{2010-06-14}
+  s.date = %q{2010-06-15}
   s.description = %q{Capistrano recipe for a deployment workflow based on git tags}
   s.email = %q{josh@technicalpickles.com}
   s.extra_rdoc_files = [
@@ -21,8 +21,8 @@ Gem::Specification.new do |s|
      "Rakefile",
      "VERSION",
      "gitflow.gemspec",
-     "lib/gitflow.rb",
-     "lib/gitflow/natcmp.rb",
+     "lib/capistrano/gitflow.rb",
+     "lib/capistrano/gitflow/natcmp.rb",
      "recipes/gitflow_recipes.rb",
      "spec/gitflow_spec.rb",
      "spec/spec.opts",
