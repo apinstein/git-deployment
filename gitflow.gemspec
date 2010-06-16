@@ -13,11 +13,11 @@ Gem::Specification.new do |s|
   s.description = %q{Capistrano recipe for a deployment workflow based on git tags}
   s.email = %q{josh@technicalpickles.com}
   s.extra_rdoc_files = [
-    "README"
+    "README.rdoc"
   ]
   s.files = [
     ".document",
-     "README",
+     "README.rdoc",
      "Rakefile",
      "VERSION",
      "gitflow.gemspec",
