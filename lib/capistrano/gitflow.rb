@@ -78,7 +78,7 @@ Please make sure you have pulled and pushed all code before deploying:
                          to_tag = if stage == :production
                                     last_staging_tag
                                   elsif stage == :staging
-                                    'head'
+                                    'master'
                                   else
                                     abort "Unsupported stage #{stage}"
                                   end
