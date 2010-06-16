@@ -48,8 +48,6 @@ Please make sure you have pulled and pushed all code before deploying:
             end
           end
 
-
-
           desc "Calculate the tag to deploy"
           task :calculate_tag do
             # make sure we have any other deployment tags that have been pushed by others so our auto-increment code doesn't create conflicting tags
@@ -162,6 +160,7 @@ Please make sure you have pulled and pushed all code before deploying:
             end
           end
         end
+
       end
 
     end

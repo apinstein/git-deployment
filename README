@@ -4,15 +4,15 @@ The best thing about this recipe is that there is almost nothing to learn -- you
 Gitflow simply adds some tagging/logging/workflow magic.
 
     # BEFORE
-    $ cap deploy              # 'head' goes to staging
-    $ cap production deploy   # 'head' goes to production
+    $ cap deploy              # 'master' goes to staging
+    $ cap production deploy   # 'master' goes to production
 
     # AFTER
     $ cap deploy                                                          
-    # 'head' goes to staging; tag staging-YYYY-MM-DD.X created
+    # 'master' goes to staging; tag staging-YYYY-MM-DD.X created
     $ cap production deploy -s tag=staging-YYYY-MM-DD-X-user-description
     # tag 'staging-YYYY-MM-DD-X' goes to production
-    # tag 'production-YYYY-MM-DD-X' created; points to staging tag
+    # tag 'production-YYYY-MM-DD-X' created; points to staging-YYYY-MM-DD-X
 
     # BONUS
     cap gitflow:commit_log              
@@ -31,8 +31,6 @@ Then update config/deploy.rb
 
     require 'capistrano/ext/multistage'
     require 'capistrano/gitflow' # needs to come after multistage
-
-TODO add notes to using multistage in general
 
 == DETAILS
 
@@ -71,3 +69,7 @@ gitflow will automatically:
 
 * you may need to wipe out the cached-copy on the remote server that cap uses when switching to this workflow; I have seen situations where the cached copy cannot cleanly checkout to the new branch/tag. it's safe to try without wiping it out first, it will fail gracefully.
 * if your stages already have a "set :branch, 'my-staging-branch'" call in your configs, remove it. This workflow configures it automatically.
+
+== CREDIT
+
+Originally forked from Alan Pinstein's git_deployment repo. Gemified and hacked by Josh Nichols. There wasn't really a license originally, so...
