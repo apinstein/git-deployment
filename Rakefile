@@ -8,7 +8,7 @@ begin
     gem.summary = %Q{Capistrano recipe for a deployment workflow based on git tags }
     gem.description = %Q{Capistrano recipe for a deployment workflow based on git tags}
     gem.email = "josh@technicalpickles.com"
-    gem.homepage = "http://github.com/technicalpickles/gitflow"
+    gem.homepage = "http://github.com/technicalpickles/capistrano-gitflow"
     gem.authors = ["Joshua Nichols"]
     gem.add_dependency "capistrano"
     gem.add_dependency "stringex"

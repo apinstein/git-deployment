@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
      "README.rdoc",
      "Rakefile",
      "VERSION",
+     "capistrano-gitflow.gemspec",
      "gitflow.gemspec",
      "lib/capistrano/gitflow.rb",
      "lib/capistrano/gitflow/natcmp.rb",
@@ -28,7 +29,7 @@ Gem::Specification.new do |s|
      "spec/spec.opts",
      "spec/spec_helper.rb"
   ]
-  s.homepage = %q{http://github.com/technicalpickles/gitflow}
+  s.homepage = %q{http://github.com/technicalpickles/capistrano-gitflow}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.6}
