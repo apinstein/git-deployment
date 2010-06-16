@@ -4,7 +4,7 @@ require 'rake'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "gitflow"
+    gem.name = "capistrano-gitflow"
     gem.summary = %Q{Capistrano recipe for a deployment workflow based on git tags }
     gem.description = %Q{Capistrano recipe for a deployment workflow based on git tags}
     gem.email = "josh@technicalpickles.com"
