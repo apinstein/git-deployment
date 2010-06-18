@@ -34,7 +34,7 @@ module Capistrano
           task :verify_up_to_date do
             set :local_branch, `git branch --no-color 2> /dev/null | sed -e '/^[^*]/d'`.gsub(/\* /, '').chomp
             set :local_sha, `git log --pretty=format:%H HEAD -1`.chomp
-            set :origin_sha, `git log --pretty=format:%H origin/#{local_branch} -1`
+            set :origin_sha, `git log --pretty=format:%H #{local_branch} -1`
             unless local_sha == origin_sha
               abort """
 Your #{local_branch} branch is not up to date with origin/#{local_branch}.
