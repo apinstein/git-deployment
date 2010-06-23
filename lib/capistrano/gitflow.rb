@@ -27,6 +27,22 @@ module Capistrano
             last_tag_matching('staging-*')
           end
 
+          def next_staging_tag
+            hwhen   = Date.today.to_s
+            who = `whoami`.chomp.to_url
+            what = Capistrano::CLI.ui.ask("What does this release introduce? (this will be normalized and used in the tag for this release) ").to_url
+
+            last_staging_tag = last_tag_matching("staging-#{hwhen}-*")
+            new_tag_serial = if last_staging_tag && last_staging_tag =~ /staging-[0-9]{4}-[0-9]{2}-[0-9]{2}\-([0-9]*)/
+                               $1.to_i + 1
+                             else
+                               1
+                             end
+
+            require 'ruby-debug';breakpoint
+            "#{stage}-#{hwhen}-#{new_tag_serial}-#{who}-#{what}"
+          end
+
           def last_production_tag()
             last_tag_matching('production-*')
           end
@@ -101,27 +117,12 @@ Please make sure you have pulled and pushed all code before deploying:
 
           desc "Mark the current code as a staging/qa release"
           task :tag_staging do
-            # find latest staging tag for today
-            new_tag_date   = Date.today.to_s
-            new_tag_serial = 1
-
-            who = `whoami`.chomp.to_url
-            what = Capistrano::CLI.ui.ask("What does this release introduce? (this will be normalized and used in the tag for this release) ").to_url
-
-            last_staging_tag = last_tag_matching("staging-#{new_tag_date}.*")
-            if last_staging_tag
-              # calculate largest serial and increment
-              last_staging_tag =~ /staging-[0-9]{4}-[0-9]{2}-[0-9]{2}\-([0-9]*)/
-                new_tag_serial = $1.to_i + 1
-            end
-
-            new_staging_tag = "#{stage}-#{new_tag_date}-#{new_tag_serial}-#{who}-#{what}"
-
             current_sha = `git log --pretty=format:%H HEAD -1`
             last_staging_tag_sha = if last_staging_tag
                                      `git log --pretty=format:%H #{last_staging_tag} -1`
                                    end
 
+            new_staging_tag = next_staging_tag
             if last_staging_tag_sha == current_sha
               puts "Not re-tagging staging because the most recent tag (#{last_staging_tag}) already points to current head"
               new_staging_tag = last_staging_tag
