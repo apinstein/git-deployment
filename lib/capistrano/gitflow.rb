@@ -39,7 +39,6 @@ module Capistrano
                                1
                              end
 
-            require 'ruby-debug';breakpoint
             "#{stage}-#{hwhen}-#{new_tag_serial}-#{who}-#{what}"
           end
 
