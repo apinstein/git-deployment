@@ -135,10 +135,10 @@ Please make sure you have pulled and pushed all code before deploying:
 
           desc "Push the approved tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD-X-feature'."
           task :tag_production do
-            promote_to_production_tag = capistrano_configuration[:tag]
+            promote_to_production_tag = capistrano_configuration[:tag] || last_staging_tag
 
             unless promote_to_production_tag && promote_to_production_tag =~ /staging-.*/
-              abort "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'"
+              abort "Couldn't find a staging tag to deploy; use '-s tag=staging-YYYY-MM-DD.X'"
             end
             unless last_tag_matching(promote_to_production_tag)
               abort "Staging tag #{promote_to_production_tag} does not exist."
@@ -146,6 +146,13 @@ Please make sure you have pulled and pushed all code before deploying:
 
             promote_to_production_tag =~ /^staging-(.*)$/
               new_production_tag = "production-#{$1}"
+            puts "Preparing to promote staging tag #{promote_to_production_tag} to production as #{new_production_tag}'"
+            unless capistrano_configuration[:tag]
+              really_deploy = Capistrano::CLI.ui.ask("Do you really want to deploy #{new_production_tag}? [y/N]").to_url
+              unless really_deploy =~ /^[Yy]$/
+                exit(1)
+              end
+            end
             puts "promoting staging tag #{promote_to_production_tag} to production as '#{new_production_tag}'"
             system "git tag -a -m 'tagging current code for deployment to production' #{new_production_tag} #{promote_to_production_tag}"
 
