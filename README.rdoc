@@ -34,6 +34,8 @@ Then update config/deploy.rb
     require 'capistrano/ext/multistage'
     require 'capistrano/gitflow' # needs to come after multistage
 
+More info at: http://rubygems.org/gems/capistrano-gitflow
+
 == DETAILS
 
 After experimenting with several workflows for deployment in git, I've finally found one I really like.
@@ -75,6 +77,7 @@ gitflow will automatically:
 == CREDIT
 
 Originally created by Alan Pinstein.
+
 Gemified and hacked by Josh Nichols.
 
 == LICENSE
@@ -82,7 +85,8 @@ Gemified and hacked by Josh Nichols.
 MIT licensed.
 
 Copyright (c) 2009-2010 Alan Pinstein <apinstein@mac.com>
-Copyright (c) 2010 Joshn Nichols
+
+Copyright (c) 2010 Josh Nichols
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
