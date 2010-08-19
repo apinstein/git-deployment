@@ -10,7 +10,9 @@ Gitflow simply adds some tagging/logging/workflow magic.
     # AFTER
     $ cap deploy                                                          
     # 'master' goes to staging; tag staging-YYYY-MM-DD.X created
-    $ cap production deploy -s tag=staging-YYYY-MM-DD-X-user-description
+    $ cap production deploy
+    # deploys latest staging tag, or if last tag is a production tag then that, to production
+    # for specifying the tag by hand add `-s tag=staging-YYYY-MM-DD-X-user-description`
     # tag 'staging-YYYY-MM-DD-X' goes to production
     # tag 'production-YYYY-MM-DD-X' created; points to staging-YYYY-MM-DD-X
 
