@@ -121,11 +121,11 @@ Please make sure you have pulled and pushed all code before deploying:
                                      `git log --pretty=format:%H #{last_staging_tag} -1`
                                    end
 
-            new_staging_tag = next_staging_tag
             if last_staging_tag_sha == current_sha
               puts "Not re-tagging staging because the most recent tag (#{last_staging_tag}) already points to current head"
               new_staging_tag = last_staging_tag
             else
+              new_staging_tag = next_staging_tag
               puts "Tagging current branch for deployment to staging as '#{new_staging_tag}'"
               system "git tag -a -m 'tagging current code for deployment to staging' #{new_staging_tag}"
             end
