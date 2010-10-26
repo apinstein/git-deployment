@@ -46,12 +46,17 @@ module Capistrano
             last_tag_matching('production-*')
           end
 
+          def using_git?
+            fetch(:scm, :git).to_sym == :git
+          end
+
           task :verify_up_to_date do
-            set :local_branch, `git branch --no-color 2> /dev/null | sed -e '/^[^*]/d'`.gsub(/\* /, '').chomp
-            set :local_sha, `git log --pretty=format:%H HEAD -1`.chomp
-            set :origin_sha, `git log --pretty=format:%H #{local_branch} -1`
-            unless local_sha == origin_sha
-              abort """
+            if using_git?
+              set :local_branch, `git branch --no-color 2> /dev/null | sed -e '/^[^*]/d'`.gsub(/\* /, '').chomp
+              set :local_sha, `git log --pretty=format:%H HEAD -1`.chomp
+              set :origin_sha, `git log --pretty=format:%H #{local_branch} -1`
+              unless local_sha == origin_sha
+                abort """
 Your #{local_branch} branch is not up to date with origin/#{local_branch}.
 Please make sure you have pulled and pushed all code before deploying:
 
@@ -60,19 +65,22 @@ Please make sure you have pulled and pushed all code before deploying:
     git push origin #{local_branch}
 
     """
+              end
             end
           end
 
           desc "Calculate the tag to deploy"
           task :calculate_tag do
-            # make sure we have any other deployment tags that have been pushed by others so our auto-increment code doesn't create conflicting tags
-            `git fetch`
+            if using_git?
+              # make sure we have any other deployment tags that have been pushed by others so our auto-increment code doesn't create conflicting tags
+              `git fetch`
 
-            send "tag_#{stage}"
+              send "tag_#{stage}"
 
-            system "git push --tags origin #{local_branch}"
-            if $? != 0
-              abort "git push failed"
+              system "git push --tags origin #{local_branch}"
+              if $? != 0
+                abort "git push failed"
+              end
             end
           end
 
