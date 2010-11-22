@@ -75,7 +75,7 @@ Please make sure you have pulled and pushed all code before deploying:
               # make sure we have any other deployment tags that have been pushed by others so our auto-increment code doesn't create conflicting tags
               `git fetch`
 
-              send "tag_#{stage}"
+              send "tag_#{stage}" if respond_to?(stage)
 
               system "git push --tags origin #{local_branch}"
               if $? != 0
