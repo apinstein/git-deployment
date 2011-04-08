@@ -61,7 +61,7 @@ Your #{local_branch} branch is not up to date with origin/#{local_branch}.
 Please make sure you have pulled and pushed all code before deploying:
 
     git pull origin #{local_branch}
-    #run tests, etc
+    # run tests, etc
     git push origin #{local_branch}
 
     """
@@ -130,7 +130,7 @@ Please make sure you have pulled and pushed all code before deploying:
                                    end
 
             if last_staging_tag_sha == current_sha
-              puts "Not re-tagging staging because the most recent tag (#{last_staging_tag}) already points to current head"
+              puts "Not re-tagging staging because latest tag (#{last_staging_tag}) already points to HEAD"
               new_staging_tag = last_staging_tag
             else
               new_staging_tag = next_staging_tag
@@ -153,16 +153,23 @@ Please make sure you have pulled and pushed all code before deploying:
             end
 
             promote_to_production_tag =~ /^staging-(.*)$/
-              new_production_tag = "production-#{$1}"
-            puts "Preparing to promote staging tag #{promote_to_production_tag} to production as #{new_production_tag}'"
-            unless capistrano_configuration[:tag]
-              really_deploy = Capistrano::CLI.ui.ask("Do you really want to deploy #{new_production_tag}? [y/N]").to_url
-              unless really_deploy =~ /^[Yy]$/
-                exit(1)
+            new_production_tag = "production-#{$1}"
+
+            if new_production_tag == last_production_tag
+              puts "Not re-tagging #{last_production_tag} because it already exists"
+             really_deploy = Capistrano::CLI.ui.ask("Do you really want to deploy #{last_production_tag}? [y/N]").to_url
+
+             exit(1) unless really_deploy =~ /^[Yy]$/
+            else
+              puts "Preparing to promote staging tag '#{promote_to_production_tag}' to '#{new_production_tag}'"
+              unless capistrano_configuration[:tag]
+                really_deploy = Capistrano::CLI.ui.ask("Do you really want to deploy #{new_production_tag}? [y/N]").to_url
+
+                exit(1) unless really_deploy =~ /^[Yy]$/
               end
+              puts "Promoting staging tag #{promote_to_production_tag} to production as '#{new_production_tag}'"
+              system "git tag -a -m 'tagging current code for deployment to production' #{new_production_tag} #{promote_to_production_tag}"
             end
-            puts "promoting staging tag #{promote_to_production_tag} to production as '#{new_production_tag}'"
-            system "git tag -a -m 'tagging current code for deployment to production' #{new_production_tag} #{promote_to_production_tag}"
 
             set :branch, new_production_tag
           end
