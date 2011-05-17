@@ -82,6 +82,9 @@ Please make sure you have pulled and pushed all code before deploying:
                 if $? != 0
                   abort "git push failed"
                 end
+              else
+                  puts "Will deploy tag: #{local_branch}"
+                  set :branch, local_branch
               end
             end
           end
