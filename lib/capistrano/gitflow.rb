@@ -1,5 +1,5 @@
 require 'capistrano'
-require 'capistrano/gitflow/natcmp'
+require File.join(File.dirname(__FILE__), 'gitflow', 'natcmp')
 require 'stringex'
 
 module Capistrano
