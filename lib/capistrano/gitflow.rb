@@ -113,17 +113,19 @@ Please make sure you have pulled and pushed all code before deploying:
                        end
 
 
-            command = if `git config remote.origin.url` =~ /git@github.com:(.*)\/(.*).git/
-                        "open https://github.com/#{$1}/#{$2}/compare/#{from_tag}...#{to_tag || 'master'}"
-                      else
-                        log_subcommand = if ENV['git_log_command'] && ENV['git_log_command'].strip != ''
-                                           ENV['git_log_command']
-                                         else
-                                           'log'
-                                         end
-                        "git #{log_subcommand} #{fromTag}..#{toTag}"
-                      end
-            puts command
+            # use custom compare command if set
+            if ENV['git_log_command'] && ENV['git_log_command'].strip != ''
+                command = "git #{ENV['git_log_command']} #{from_tag}..#{to_tag}"
+            else
+                # default compare command
+                # be awesome for github
+                if `git config remote.origin.url` =~ /git@github.com:(.*)\/(.*).git/
+                    command = "open https://github.com/#{$1}/#{$2}/compare/#{from_tag}...#{to_tag}"
+                else
+                    command = "git log #{from_tag}..#{to_tag}"
+                end
+            end
+            puts "Displaying commits from #{from_tag} to #{to_tag} via:\n#{command}"
             system command
           end
 
