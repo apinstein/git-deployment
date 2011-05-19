@@ -11,16 +11,10 @@ module Capistrano
 
         namespace :gitflow do
           def last_tag_matching(pattern)
-            matching_tags = `git tag -l '#{pattern}'`.split
-            matching_tags.sort! do |a,b|
-              String.natcmp(b, a, true)
-            end
-
-            last_tag = if matching_tags.length > 0
-                         matching_tags[0]
-                       else
-                         nil
-                       end
+            # search for most recent (chronologically) tag matching the passed pattern, then get the name of that tag.
+            last_tag = `git describe --exact-match \`git log --tags='#{pattern}*' --format="%H" -1\``.chomp
+            return nil if last_tag == ''
+            return last_tag
           end
 
           def last_staging_tag()
