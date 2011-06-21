@@ -12,7 +12,7 @@ module Capistrano
         namespace :gitflow do
           def last_tag_matching(pattern)
             # search for most recent (chronologically) tag matching the passed pattern, then get the name of that tag.
-            last_tag = `git describe --exact-match \`git log --tags='#{pattern}*' --format="%H" -1\``.chomp
+            last_tag = `git describe --exact-match --match '#{pattern}' \`git log --tags='#{pattern}*' --format="%H" -1\``.chomp
             return nil if last_tag == ''
             return last_tag
           end
