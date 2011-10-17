@@ -121,6 +121,8 @@ Please make sure you have pulled and pushed all code before deploying:
             end
             puts "Displaying commits from #{from_tag} to #{to_tag} via:\n#{command}"
             system command
+
+            puts ""
           end
 
           desc "Mark the current code as a staging/qa release"
@@ -158,11 +160,12 @@ Please make sure you have pulled and pushed all code before deploying:
 
             if new_production_tag == last_production_tag
               puts "Not re-tagging #{last_production_tag} because it already exists"
-             really_deploy = Capistrano::CLI.ui.ask("Do you really want to deploy #{last_production_tag}? [y/N]").to_url
+              really_deploy = Capistrano::CLI.ui.ask("Do you really want to deploy #{last_production_tag}? [y/N]").to_url
 
              exit(1) unless really_deploy =~ /^[Yy]$/
             else
               puts "Preparing to promote staging tag '#{promote_to_production_tag}' to '#{new_production_tag}'"
+              gitflow.commit_log
               unless capistrano_configuration[:tag]
                 really_deploy = Capistrano::CLI.ui.ask("Do you really want to deploy #{new_production_tag}? [y/N]").to_url
 
