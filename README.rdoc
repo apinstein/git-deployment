@@ -1,0 +1,107 @@
+= gitflow: a Capistrano recipe for git deployment using tags in a multistage environment.
+
+The best thing about this recipe is that there is almost nothing to learn -- your cap deploy process barely changes.
+Gitflow simply adds some tagging/logging/workflow magic.
+
+    # BEFORE
+    $ cap deploy              # 'master' goes to staging
+    $ cap production deploy   # 'master' goes to production
+
+    # AFTER
+    $ cap deploy                                                          
+    # 'master' goes to staging; tag staging-YYYY-MM-DD.X created
+    $ cap production deploy
+    # deploys latest staging tag, or if last tag is a production tag then that, to production
+    # for specifying the tag by hand add `-s tag=staging-YYYY-MM-DD-X-user-description`
+    # tag 'staging-YYYY-MM-DD-X' goes to production
+    # tag 'production-YYYY-MM-DD-X' created; points to staging-YYYY-MM-DD-X
+
+    # BONUS
+    cap gitflow:commit_log              
+    # displays a commit log pushed to staging
+    # ... alternatively, if you're using GitHub, will open a page using branch compare
+    cap production gitflow:log_log   
+    # displays a commit log of what will be pushed to production
+
+== INSTALLATION
+
+First, install the gem:
+
+    gem install capistrano-gitflow
+
+Then update config/deploy.rb
+
+    require 'capistrano/ext/multistage'
+    require 'capistrano/gitflow' # needs to come after multistage
+
+More info at: http://rubygems.org/gems/capistrano-gitflow
+
+== DETAILS
+
+After experimenting with several workflows for deployment in git, I've finally found one I really like.
+
+* You can push to staging at any time; every staging push is automatically tagged with a unique tag.
+* You can only push a staging tag to production. This helps to enforce QA of all pushes to production.
+
+=== PUSH TO STAGING
+
+Whenever you want to push the currently checked-out code to staging, just do:
+
+    cap staging deploy
+
+gitflow will automatically:
+
+* create a unique tag in the format of 'staging-YYYY-MM-DD.X'
+* configure multistage to use that tag for the deploy
+* push the code and tags to the remote "origin"
+* and run the normal deploy task for the staging stage.
+
+=== PUSH TO PRODUCTION:
+
+Whenever you want to push code to production, you must specify the staging tag you wish to promote to production:
+
+    cap production deploy -s tag=staging-2009-09-08.2
+
+gitflow will automatically:
+
+* alias the staging tag to a production tag like: production-2008-09-08.2
+* configure multistage to use that tag for the deploy
+* push the code and tags to the remote "origin"
+* and run the normal deploy task for the production stage.
+
+=== NOTES:
+
+* you may need to wipe out the cached-copy on the remote server that cap uses when switching to this workflow; I have seen situations where the cached copy cannot cleanly checkout to the new branch/tag. it's safe to try without wiping it out first, it will fail gracefully.
+* if your stages already have a "set :branch, 'my-staging-branch'" call in your configs, remove it. This workflow configures it automatically.
+
+== CREDIT
+
+Originally created by Alan Pinstein.
+
+Gemified and hacked by Josh Nichols.
+
+== LICENSE
+
+MIT licensed.
+
+Copyright (c) 2009-2010 Alan Pinstein <apinstein@mac.com>
+
+Copyright (c) 2010 Josh Nichols
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
