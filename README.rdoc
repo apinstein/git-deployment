@@ -10,17 +10,18 @@ Gitflow simply adds some tagging/logging/workflow magic.
     # AFTER
     $ cap deploy                                                          
     # 'master' goes to staging; tag staging-YYYY-MM-DD.X created
+
     $ cap production deploy
     # deploys latest staging tag, or if last tag is a production tag then that, to production
-    # for specifying the tag by hand add `-s tag=staging-YYYY-MM-DD-X-user-description`
+    # displays a commit log of what will be pushed to production, requests confirmation before deploying
     # tag 'staging-YYYY-MM-DD-X' goes to production
     # tag 'production-YYYY-MM-DD-X' created; points to staging-YYYY-MM-DD-X
 
     # BONUS
-    cap gitflow:commit_log              
+    $ cap gitflow:commit_log              
     # displays a commit log pushed to staging
-    # ... alternatively, if you're using GitHub, will open a page using branch compare
-    cap production gitflow:log_log   
+    
+    $ cap production gitflow:commit_log   
     # displays a commit log of what will be pushed to production
 
 == INSTALLATION
@@ -58,12 +59,15 @@ gitflow will automatically:
 
 === PUSH TO PRODUCTION:
 
-Whenever you want to push code to production, you must specify the staging tag you wish to promote to production:
+Whenever you want to push code to production, just do:
 
-    cap production deploy -s tag=staging-2009-09-08.2
+    cap production deploy
 
 gitflow will automatically:
 
+* determine the last staging tag created, show a commit log of last-production-tag..last-staging-tag
+* (alternatively, specify the tag to push to production via `-s tag=staging-YYYY-MM-DD-X-user-description`
+* prompt for confirmation of deploy
 * alias the staging tag to a production tag like: production-2008-09-08.2
 * configure multistage to use that tag for the deploy
 * push the code and tags to the remote "origin"
@@ -84,9 +88,9 @@ Gemified and hacked by Josh Nichols.
 
 MIT licensed.
 
-Copyright (c) 2009-2010 Alan Pinstein <apinstein@mac.com>
+Copyright (c) 2009-2011 Alan Pinstein <apinstein@mac.com>
 
-Copyright (c) 2010 Josh Nichols
+Copyright (c) 2010-2011 Josh Nichols
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
