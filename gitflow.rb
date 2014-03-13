@@ -22,9 +22,15 @@ Capistrano::Configuration.instance(true).load do |configuration|
             return last_tag_matching('staging-*')
         end
 
+<<<<<<< Updated upstream
         def last_demo_tag()
             return last_tag_matching('demo-*')
         end
+=======
+        def last_uat_tag()
+            return last_tag_matching('uat-*')
+        end        
+>>>>>>> Stashed changes
 
         def last_production_tag()
             return last_tag_matching('production-*')
@@ -55,12 +61,21 @@ Capistrano::Configuration.instance(true).load do |configuration|
             toTag = nil
 
             # do different things based on stage
+<<<<<<< Updated upstream
             if stage == :production
                 fromTag = last_production_tag
             elsif stage == :demo
                 fromTag = last_demo_tag
             elsif stage == :staging
                 fromTag = last_staging_tag
+=======
+            if (stage == :production or stage = :production_vagrant)
+                fromTag = last_tag_matching("#{stage}-*")
+            elsif (stage == :staging or stage = :staging_vagrant)
+                fromTag = last_tag_matching("#{stage}-*")
+            elsif (stage == :uat)
+                fromTag = last_tag_matching("#{uat}-*")                
+>>>>>>> Stashed changes
             else
                 raise "Unsupported stage #{stage}"
             end
@@ -72,9 +87,15 @@ Capistrano::Configuration.instance(true).load do |configuration|
                 # do different things based on stage
                 if stage == :production
                     toTag = last_staging_tag
+<<<<<<< Updated upstream
                 elsif stage == :demo
                     toTag = last_staging_tag
                 elsif stage == :staging
+=======
+                elsif (stage == :uat)
+                    toTag = last_staging_tag                    
+                elsif (stage == :staging or stage = :staging_vagrant)
+>>>>>>> Stashed changes
                     toTag = 'head'
                 else
                     raise "Unsupported stage #{stage}"
@@ -136,6 +157,21 @@ Capistrano::Configuration.instance(true).load do |configuration|
 
             set :branch, newDemoTag
         end
+
+        desc "Push the passed staging tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
+        task :tag_uat do
+            promoteToUatTag = configuration[:tag]
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToUatTag
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToUatTag =~ /staging-.*/
+            raise "Staging Tag #{promoteToUatTag} does not exist." unless last_tag_matching(promoteToUatTag)
+
+            promoteToUatTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
+            newUatTag = "uat-#{$1}"
+            puts "promoting staging tag #{promoteToUatTag} to uat as '#{newUatTag}'"
+            system "git tag -a -m 'tagging current code for deployment to uat' #{newUatTag} #{promoteToUatTag}"
+
+            set :branch, newUatTag
+        end        
 
         desc "Push the passed staging tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
         task :tag_production do
