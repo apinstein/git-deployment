@@ -11,7 +11,7 @@ Capistrano::Configuration.instance(true).load do |configuration|
             allTagsMatching.sort! do |a,b|
                 String.natcmp(b,a,true)
             end
-            
+
             if allTagsMatching.length > 0
                 lastTag = allTagsMatching[0]
             end
@@ -25,6 +25,10 @@ Capistrano::Configuration.instance(true).load do |configuration|
         def last_demo_tag()
             return last_tag_matching('demo-*')
         end
+
+        def last_uat_tag()
+            return last_tag_matching('uat-*')
+        end        
 
         def last_production_tag()
             return last_tag_matching('production-*')
@@ -55,12 +59,14 @@ Capistrano::Configuration.instance(true).load do |configuration|
             toTag = nil
 
             # do different things based on stage
-            if stage == :production
-                fromTag = last_production_tag
+            if (stage == :production or stage = :production_vagrant)
+                fromTag = last_tag_matching("#{stage}-*")
             elsif stage == :demo
                 fromTag = last_demo_tag
-            elsif stage == :staging
-                fromTag = last_staging_tag
+            elsif stage == :uat
+                fromTag = last_uat_tag                
+            elsif (stage == :staging or stage = :staging_vagrant)
+                fromTag = last_tag_matching("#{stage}-*")
             else
                 raise "Unsupported stage #{stage}"
             end
@@ -70,11 +76,13 @@ Capistrano::Configuration.instance(true).load do |configuration|
             if toTag == nil
                 puts "Calculating 'end' tag for :update_log for '#{stage}'"
                 # do different things based on stage
-                if stage == :production
+                if (stage == :production or stage = :production_vagrant)
                     toTag = last_staging_tag
                 elsif stage == :demo
                     toTag = last_staging_tag
-                elsif stage == :staging
+                elsif stage == :uat
+                    toTag = last_staging_tag                    
+                elsif (stage == :staging or stage = :staging_vagrant)
                     toTag = 'head'
                 else
                     raise "Unsupported stage #{stage}"
@@ -94,7 +102,7 @@ Capistrano::Configuration.instance(true).load do |configuration|
         desc "Mark the current code as a staging/qa release"
         task :tag_staging do
             # find latest staging tag for today
-            newTagDate = Date.today.to_s 
+            newTagDate = Date.today.to_s
             newTagSerial = 1
 
             lastStagingTag = last_tag_matching("staging-#{newTagDate}.*")
@@ -122,6 +130,21 @@ Capistrano::Configuration.instance(true).load do |configuration|
             set :branch, newStagingTag
         end
 
+        desc "Push the passed staging tag to demo_vagrant. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
+        task :tag_demo_vagrant do
+            promoteToDemoTag = configuration[:tag]
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToDemoTag =~ /staging-.*/
+            raise "Staging Tag #{promoteToDemoTag} does not exist." unless last_tag_matching(promoteToDemoTag)
+            
+            promoteToDemoTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
+            newDemoTag = "demo_vagrant-#{$1}"
+            puts "promoting staging tag #{promoteToDemoTag} to demo_vagrant as '#{newDemoTag}'"
+            system "git tag -a -m 'tagging current code for deployment to demo_vagrant' #{newDemoTag} #{promoteToDemoTag}"
+
+            set :branch, newDemoTag
+        end
+
         desc "Push the passed staging tag to demo. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
         task :tag_demo do
             promoteToDemoTag = configuration[:tag]
@@ -137,17 +160,78 @@ Capistrano::Configuration.instance(true).load do |configuration|
             set :branch, newDemoTag
         end
 
+        desc "Push the passed staging tag to uat. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
+        task :tag_uat do
+            promoteToUatTag = configuration[:tag]
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToUatTag
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToUatTag =~ /staging-.*/
+            raise "Staging Tag #{promoteToUatTag} does not exist." unless last_tag_matching(promoteToUatTag)
+            
+            promoteToUatTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
+            newUatTag = "uat-#{$1}"
+            puts "promoting staging tag #{promoteToUatTag} to uat as '#{newUatTag}'"
+            system "git tag -a -m 'tagging current code for deployment to uat' #{newUatTag} #{promoteToUatTag}"
+
+            set :branch, newUatTag
+        end        
+
         desc "Push the passed staging tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
         task :tag_production do
             promoteToProductionTag = configuration[:tag]
             raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToProductionTag
             raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToProductionTag =~ /staging-.*/
             raise "Staging Tag #{promoteToProductionTag} does not exist." unless last_tag_matching(promoteToProductionTag)
-            
+
             promoteToProductionTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
             newProductionTag = "production-#{$1}"
             puts "promoting staging tag #{promoteToProductionTag} to production as '#{newProductionTag}'"
             system "git tag -a -m 'tagging current code for deployment to production' #{newProductionTag} #{promoteToProductionTag}"
+
+            set :branch, newProductionTag
+        end
+
+        desc "Mark the current code as a staging/qa release"
+        task :tag_staging_vagrant do
+            # find latest staging tag for today
+            newTagDate = Date.today.to_s
+            newTagSerial = 1
+
+            lastStagingTag = last_tag_matching("staging_vagrant-#{newTagDate}.*")
+            if lastStagingTag
+                # calculate largest serial and increment
+                lastStagingTag =~ /staging_vagrant-[0-9]{4}-[0-9]{2}-[0-9]{2}\.([0-9]*)/
+                newTagSerial = $1.to_i + 1
+            end
+            newStagingTag = "staging_vagrant-#{newTagDate}.#{newTagSerial}"
+
+            shaOfCurrentCheckout = `git log --pretty=format:%H HEAD -1`
+            shaOfLastStagingTag = nil
+            if lastStagingTag
+                shaOfLastStagingTag = `git log --pretty=format:%H #{lastStagingTag} -1`
+            end
+
+            if shaOfLastStagingTag == shaOfCurrentCheckout
+                puts "Not re-tagging staging_vagrant because the most recent tag (#{lastStagingTag}) already points to current head"
+                newStagingTag = lastStagingTag
+            else
+                puts "Tagging current branch for deployment to staging_vagrant as '#{newStagingTag}'"
+                system "git tag -a -m 'tagging current code for deployment to staging_vagrant' #{newStagingTag}"
+            end
+
+            set :branch, newStagingTag
+        end
+
+        desc "Push the passed staging tag to production_vagrant. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
+        task :tag_production_vagrant do
+            promoteToProductionTag = configuration[:tag]
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToProductionTag
+            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToProductionTag =~ /staging-.*/
+            raise "Staging Tag #{promoteToProductionTag} does not exist." unless last_tag_matching(promoteToProductionTag)
+
+            promoteToProductionTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
+            newProductionTag = "production_vagrant-#{$1}"
+            puts "promoting staging tag #{promoteToProductionTag} to production_vagrant as '#{newProductionTag}'"
+            system "git tag -a -m 'tagging current code for deployment to production_vagrant' #{newProductionTag} #{promoteToProductionTag}"
 
             set :branch, newProductionTag
         end
