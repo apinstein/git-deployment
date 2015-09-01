@@ -160,20 +160,58 @@ Capistrano::Configuration.instance(true).load do |configuration|
             set :branch, newDemoTag
         end
 
-        desc "Push the passed staging tag to uat. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
-        task :tag_uat do
-            promoteToUatTag = configuration[:tag]
-            raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToUatTag
+        def generate_uat_tag()
+            # find latest uat tag for today
+            newTagDate = Date.today.to_s
+            newTagSerial = 1
+
+            lastUatTag = last_tag_matching("uat-#{newTagDate}.*")
+            if lastUatTag
+                # calculate largest serial and increment
+                lastUatTag =~ /uat-[0-9]{4}-[0-9]{2}-[0-9]{2}\.([0-9]*)/
+                newTagSerial = $1.to_i + 1
+            end
+            newUatTag = "uat-#{newTagDate}.#{newTagSerial}"
+
+            shaOfCurrentCheckout = `git log --pretty=format:%H HEAD -1`
+            shaOfLastUatTag = nil
+            if lastUatTag
+                shaOfLastUatTag = `git log --pretty=format:%H #{lastUatTag} -1`
+            end
+
+            if shaOfLastUatTag == shaOfCurrentCheckout
+                puts "Not re-tagging uat because the most recent tag (#{lastUatTag}) already points to current head"
+                newUatTag = lastUatTag
+            else
+                puts "Tagging current branch for deployment to uat as '#{newUatTag}'"
+                system "git tag -a -m 'tagging current code for deployment to uat' #{newUatTag}"
+            end
+            return newUatTag
+        end
+
+        def staging_to_uat(promoteToUatTag)
             raise "Staging tag required; use '-s tag=staging-YYYY-MM-DD.X'" unless promoteToUatTag =~ /staging-.*/
             raise "Staging Tag #{promoteToUatTag} does not exist." unless last_tag_matching(promoteToUatTag)
-            
+
             promoteToUatTag =~ /staging-([0-9]{4}-[0-9]{2}-[0-9]{2}\.[0-9]*)/
             newUatTag = "uat-#{$1}"
             puts "promoting staging tag #{promoteToUatTag} to uat as '#{newUatTag}'"
             system "git tag -a -m 'tagging current code for deployment to uat' #{newUatTag} #{promoteToUatTag}"
+            return newUatTag
+        end
 
+        desc "Mark the current code as a uat release"
+        task :tag_uat do
+            promoteToUatTag = configuration[:tag]
+            #if the user inputs a -s tag=staging ...
+            if promoteToUatTag
+                newUatTag = staging_to_uat(promoteToUatTag)
+            else
+                newUatTag = generate_uat_tag
+            end
             set :branch, newUatTag
-        end        
+        end  
+
 
         desc "Push the passed staging tag to production. Pass in tag to deploy with '-s tag=staging-YYYY-MM-DD.X'."
         task :tag_production do
