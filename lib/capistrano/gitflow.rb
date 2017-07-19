@@ -22,7 +22,7 @@ module Capistrano
           end
 
           def next_staging_tag
-            hwhen   = Date.today.to_s
+            hwhen   = Time.now.utc.to_date.to_s
             who = `whoami`.chomp.to_url
             what = Capistrano::CLI.ui.ask("What does this release introduce? (this will be normalized and used in the tag for this release) ").to_url
 
